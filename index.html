@@ -1,0 +1,737 @@
+<!DOCTYPE html>
+<html lang="es-AR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bezzi — Bezza conversacional</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Mona+Sans:ital,wght@0,200..900;1,200..900&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --rojo:#F30027;
+    --purpura:#C315AB;
+    --gradiente: linear-gradient(120deg, var(--rojo) 0%, var(--purpura) 100%);
+    --verde-bancor:#005F5A;
+    --verde-brillante:#CAF14D;
+    --verde-claro:#D4F8D9;
+    --negro:#0B0B0C;
+    --carbon:#141416;
+    --vidrio: rgba(255,255,255,0.06);
+    --vidrio-borde: rgba(255,255,255,0.10);
+    --texto-alto:#F7F7F5;
+    --texto-bajo:#9C9C9F;
+    --radius-xl: 30px;
+    --font-txt-scale: 1;
+  }
+
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+  html,body{height:100%;}
+  body{
+    margin:0;
+    min-height:100vh;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    background:
+      radial-gradient(60% 50% at 22% 18%, rgba(243,0,39,0.20), transparent 60%),
+      radial-gradient(55% 55% at 82% 78%, rgba(195,21,171,0.20), transparent 60%),
+      radial-gradient(80% 80% at 50% 50%, #121214, #050505 75%);
+    font-family:"Mona Sans", system-ui, sans-serif;
+    padding:40px 16px;
+    overflow-x:hidden;
+  }
+
+  .stage-label{
+    position:fixed;
+    top:22px; left:50%; transform:translateX(-50%);
+    color:var(--texto-bajo);
+    font-size:12px;
+    letter-spacing:.14em;
+    text-transform:uppercase;
+    font-weight:600;
+    opacity:.7;
+  }
+
+  /* ---------- iPhone frame ---------- */
+  .phone{
+    position:relative;
+    width:390px;
+    height:844px;
+    max-height:92vh;
+    background:#000;
+    border-radius:62px;
+    padding:14px;
+    box-shadow:
+      0 0 0 2px rgba(255,255,255,0.06),
+      0 40px 90px rgba(0,0,0,0.65),
+      0 8px 24px rgba(243,0,39,0.08);
+  }
+  .screen{
+    position:relative;
+    width:100%;
+    height:100%;
+    border-radius:48px;
+    overflow:hidden;
+    background:var(--negro);
+    display:flex;
+    flex-direction:column;
+  }
+  .island{
+    position:absolute;
+    top:12px; left:50%; transform:translateX(-50%);
+    width:120px; height:34px;
+    background:#000;
+    border-radius:20px;
+    z-index:50;
+  }
+  .statusbar{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:16px 28px 4px;
+    font-size:15px;
+    font-weight:600;
+    color:var(--texto-alto);
+    flex-shrink:0;
+  }
+  .statusbar .icons{display:flex; gap:6px; align-items:center;}
+  .home-indicator{
+    position:absolute;
+    bottom:8px; left:50%; transform:translateX(-50%);
+    width:134px; height:5px;
+    border-radius:4px;
+    background:rgba(255,255,255,0.5);
+    z-index:50;
+  }
+
+  /* ---------- Header conversacional ---------- */
+  .app-header{
+    flex-shrink:0;
+    padding:6px 20px 14px;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:10px;
+  }
+  .header-row{
+    width:100%;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+  }
+  .brand{
+    display:flex;
+    align-items:center;
+    gap:8px;
+  }
+  .brand-dot{
+    width:9px;height:9px;border-radius:50%;
+    background:var(--verde-brillante);
+    box-shadow:0 0 10px var(--verde-brillante);
+  }
+  .brand-name{
+    font-weight:800;
+    font-size:15px;
+    color:var(--texto-alto);
+    letter-spacing:.01em;
+  }
+  .brand-name span{color:var(--verde-brillante);}
+  .header-actions{display:flex; gap:10px;}
+  .icon-btn{
+    width:34px; height:34px;
+    border-radius:50%;
+    background:var(--vidrio);
+    border:1px solid var(--vidrio-borde);
+    display:flex; align-items:center; justify-content:center;
+    color:var(--texto-alto);
+    cursor:pointer;
+  }
+  .icon-btn:active{transform:scale(0.92);}
+
+  /* --- El Arco: elemento firma de Bezza, orbe/arco vivo --- */
+  .arco-wrap{
+    width:100%;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:6px;
+    padding:2px 0 4px;
+  }
+  .arco{
+    position:relative;
+    width:132px;
+    height:66px;
+  }
+  .arco svg{width:100%; height:100%; display:block;}
+  .arco-glow{
+    position:absolute;
+    inset:-30px;
+    background:var(--gradiente);
+    filter:blur(28px);
+    opacity:.35;
+    border-radius:50%;
+    z-index:-1;
+    animation:respirar 4.5s ease-in-out infinite;
+  }
+  @keyframes respirar{
+    0%,100%{opacity:.28; transform:scale(0.94);}
+    50%{opacity:.5; transform:scale(1.05);}
+  }
+  .arco.escuchando .arco-glow{animation-duration:1.1s;}
+  .arco-estado{
+    font-size:12.5px;
+    color:var(--texto-bajo);
+    font-weight:500;
+    letter-spacing:.02em;
+  }
+
+  /* ---------- Chat ---------- */
+  .chat{
+    flex:1;
+    overflow-y:auto;
+    padding:6px 16px 12px;
+    display:flex;
+    flex-direction:column;
+    gap:12px;
+    scrollbar-width:none;
+  }
+  .chat::-webkit-scrollbar{display:none;}
+
+  .msg{
+    max-width:82%;
+    display:flex;
+    flex-direction:column;
+    gap:6px;
+    animation:aparecer .35s ease both;
+  }
+  @keyframes aparecer{
+    from{opacity:0; transform:translateY(8px);}
+    to{opacity:1; transform:translateY(0);}
+  }
+  .msg.bezzi{align-self:flex-start;}
+  .msg.user{align-self:flex-end;}
+
+  .bubble{
+    padding:12px 15px;
+    border-radius:20px;
+    font-size:calc(15px * var(--font-txt-scale));
+    line-height:1.42;
+    font-weight:400;
+  }
+  .msg.bezzi .bubble{
+    background:var(--vidrio);
+    border:1px solid var(--vidrio-borde);
+    color:var(--texto-alto);
+    border-bottom-left-radius:6px;
+  }
+  .msg.bezzi .bubble strong{font-weight:700;}
+  .msg.user .bubble{
+    background:var(--verde-brillante);
+    color:#122006;
+    font-weight:600;
+    border-bottom-right-radius:6px;
+  }
+
+  .sender{
+    font-size:11px;
+    color:var(--texto-bajo);
+    padding:0 4px;
+    font-weight:600;
+    letter-spacing:.02em;
+  }
+  .msg.user .sender{align-self:flex-end;}
+
+  /* Tarjeta de saldo dentro del chat */
+  .card{
+    background:linear-gradient(160deg, rgba(243,0,39,0.16), rgba(195,21,171,0.16));
+    border:1px solid rgba(255,255,255,0.12);
+    border-radius:22px;
+    padding:18px 20px;
+    color:var(--texto-alto);
+    display:flex;
+    flex-direction:column;
+    gap:6px;
+  }
+  .card .etiqueta{font-size:calc(12px * var(--font-txt-scale)); color:var(--texto-bajo); font-weight:600;}
+  .card .monto{font-size:calc(30px * var(--font-txt-scale)); font-weight:800; letter-spacing:-0.01em;}
+  .card .nota{font-size:calc(12.5px * var(--font-txt-scale)); color:var(--verde-brillante); font-weight:600;}
+
+  /* Chips de acciones rápidas / respuestas sugeridas */
+  .chips{
+    display:flex;
+    flex-wrap:wrap;
+    gap:9px;
+    max-width:100%;
+  }
+  .chip{
+    padding:11px 16px;
+    border-radius:999px;
+    background:var(--vidrio);
+    border:1px solid var(--vidrio-borde);
+    color:var(--texto-alto);
+    font-size:calc(14px * var(--font-txt-scale));
+    font-weight:600;
+    cursor:pointer;
+    display:flex;
+    align-items:center;
+    gap:7px;
+    transition:transform .12s ease, background .2s ease;
+  }
+  .chip:active{transform:scale(0.95);}
+  .chip.destacado{
+    background:var(--gradiente);
+    border:none;
+    color:#fff;
+  }
+  .chip.humano{
+    background:var(--verde-bancor);
+    border:none;
+    color:#fff;
+  }
+
+  .confirm-card{
+    background:var(--verde-claro);
+    border-radius:20px;
+    padding:16px 18px;
+    color:#0E1D10;
+    display:flex;
+    align-items:center;
+    gap:12px;
+  }
+  .confirm-card .check{
+    width:34px; height:34px;
+    border-radius:50%;
+    background:var(--verde-bancor);
+    color:#fff;
+    display:flex; align-items:center; justify-content:center;
+    flex-shrink:0;
+    font-size:16px;
+  }
+  .confirm-card .txt b{display:block; font-size:calc(14.5px * var(--font-txt-scale));}
+  .confirm-card .txt span{font-size:calc(12.5px * var(--font-txt-scale)); opacity:.75;}
+
+  .typing{
+    display:flex; gap:4px; align-items:center;
+    padding:12px 15px;
+    background:var(--vidrio);
+    border:1px solid var(--vidrio-borde);
+    border-radius:20px;
+    border-bottom-left-radius:6px;
+    width:fit-content;
+  }
+  .typing span{
+    width:6px;height:6px;border-radius:50%;
+    background:var(--texto-bajo);
+    animation:parpadeo 1.1s infinite ease-in-out;
+  }
+  .typing span:nth-child(2){animation-delay:.15s;}
+  .typing span:nth-child(3){animation-delay:.3s;}
+  @keyframes parpadeo{0%,60%,100%{opacity:.25; transform:translateY(0);} 30%{opacity:1; transform:translateY(-2px);}}
+
+  /* ---------- Barra inferior: accesibilidad + input ---------- */
+  .a11y-bar{
+    flex-shrink:0;
+    display:flex;
+    gap:8px;
+    padding:0 16px 8px;
+    overflow-x:auto;
+    scrollbar-width:none;
+  }
+  .a11y-bar::-webkit-scrollbar{display:none;}
+  .a11y-btn{
+    flex-shrink:0;
+    padding:7px 13px;
+    border-radius:999px;
+    background:transparent;
+    border:1px solid var(--vidrio-borde);
+    color:var(--texto-bajo);
+    font-size:11.5px;
+    font-weight:600;
+    display:flex; align-items:center; gap:5px;
+    cursor:pointer;
+  }
+  .a11y-btn.on{
+    background:rgba(202,241,77,0.14);
+    border-color:var(--verde-brillante);
+    color:var(--verde-brillante);
+  }
+
+  .input-bar{
+    flex-shrink:0;
+    display:flex;
+    align-items:center;
+    gap:10px;
+    padding:10px 14px calc(env(safe-area-inset-bottom, 0px) + 16px);
+    background:linear-gradient(0deg, rgba(11,11,12,1) 60%, rgba(11,11,12,0));
+  }
+  .mic-btn{
+    width:50px; height:50px;
+    border-radius:50%;
+    background:var(--gradiente);
+    border:none;
+    display:flex; align-items:center; justify-content:center;
+    color:#fff;
+    flex-shrink:0;
+    cursor:pointer;
+    box-shadow:0 6px 18px rgba(195,21,171,0.35);
+  }
+  .mic-btn.activo{animation:pulso 1s infinite;}
+  @keyframes pulso{
+    0%{box-shadow:0 0 0 0 rgba(202,241,77,0.55);}
+    70%{box-shadow:0 0 0 14px rgba(202,241,77,0);}
+    100%{box-shadow:0 0 0 0 rgba(202,241,77,0);}
+  }
+  .text-field{
+    flex:1;
+    display:flex;
+    align-items:center;
+    background:var(--vidrio);
+    border:1px solid var(--vidrio-borde);
+    border-radius:26px;
+    padding:4px 6px 4px 18px;
+  }
+  .text-field input{
+    flex:1;
+    background:none;
+    border:none;
+    outline:none;
+    color:var(--texto-alto);
+    font-family:inherit;
+    font-size:calc(15px * var(--font-txt-scale));
+    padding:9px 6px;
+  }
+  .text-field input::placeholder{color:var(--texto-bajo);}
+  .send-btn{
+    width:38px; height:38px;
+    border-radius:50%;
+    background:var(--verde-brillante);
+    border:none;
+    display:flex; align-items:center; justify-content:center;
+    color:#0E1D10;
+    cursor:pointer;
+    flex-shrink:0;
+  }
+  .send-btn:active{transform:scale(0.92);}
+
+  .caption{
+    position:fixed;
+    bottom:18px; left:50%; transform:translateX(-50%);
+    color:var(--texto-bajo);
+    font-size:12px;
+    text-align:center;
+    max-width:340px;
+    line-height:1.5;
+  }
+  .caption b{color:var(--verde-brillante);}
+
+  @media (max-width:460px){
+    .phone{width:100%; height:100dvh; max-height:100dvh; border-radius:0; padding:0;}
+    .screen{border-radius:0;}
+    body{padding:0;}
+    .stage-label,.caption{display:none;}
+  }
+</style>
+</head>
+<body>
+
+<div class="stage-label">Prototipo · Bezza conversacional</div>
+
+<div class="phone">
+  <div class="screen" id="screen">
+    <div class="island"></div>
+
+    <div class="statusbar">
+      <span id="clock">21:04</span>
+      <div class="icons">
+        <span>●●●</span>
+        <span>📶</span>
+        <span>🔋</span>
+      </div>
+    </div>
+
+    <div class="app-header">
+      <div class="header-row">
+        <div class="brand">
+          <span class="brand-dot"></span>
+          <span class="brand-name">Bezzi <span>·</span> Bezza</span>
+        </div>
+        <div class="header-actions">
+          <div class="icon-btn" title="Perfil">👤</div>
+          <div class="icon-btn" title="Ajustes">⚙️</div>
+        </div>
+      </div>
+      <div class="arco-wrap">
+        <div class="arco" id="arco">
+          <div class="arco-glow"></div>
+          <svg viewBox="0 0 132 66" fill="none">
+            <defs>
+              <linearGradient id="g1" x1="0" y1="0" x2="132" y2="0">
+                <stop offset="0" stop-color="#F30027"/>
+                <stop offset="1" stop-color="#C315AB"/>
+              </linearGradient>
+            </defs>
+            <path id="arco-path" d="M8 50 Q 66 -6 124 50" stroke="url(#g1)" stroke-width="7" stroke-linecap="round" fill="none"/>
+          </svg>
+        </div>
+        <div class="arco-estado" id="arco-estado">Bezzi está lista para ayudarte</div>
+      </div>
+    </div>
+
+    <div class="chat" id="chat"></div>
+
+    <div class="a11y-bar">
+      <div class="a11y-btn" id="btn-textogrande">🔤 Texto grande</div>
+      <div class="a11y-btn" id="btn-leer">🔊 Leer en voz alta</div>
+      <div class="a11y-btn on" id="btn-simple">💬 Lenguaje simple</div>
+    </div>
+
+    <div class="input-bar">
+      <button class="mic-btn" id="btnMic" title="Hablar con Bezzi">🎙️</button>
+      <div class="text-field">
+        <input id="inputTexto" type="text" placeholder="Escribile a Bezzi…" />
+      </div>
+      <button class="send-btn" id="btnEnviar">➤</button>
+    </div>
+
+    <div class="home-indicator"></div>
+  </div>
+</div>
+
+<div class="caption">Simulación de app · inspirada en <b>Revolut Air</b> con identidad y voz de <b>Bezza</b>, la billetera cordobesa.</div>
+
+<script>
+const chat = document.getElementById('chat');
+const arco = document.getElementById('arco');
+const arcoEstado = document.getElementById('arco-estado');
+const inputTexto = document.getElementById('inputTexto');
+const btnEnviar = document.getElementById('btnEnviar');
+const btnMic = document.getElementById('btnMic');
+
+function scrollAbajo(){ chat.scrollTop = chat.scrollHeight; }
+
+function crearMsg({from, html, sender}){
+  const wrap = document.createElement('div');
+  wrap.className = 'msg ' + from;
+  if(sender){
+    const s = document.createElement('div');
+    s.className = 'sender';
+    s.textContent = sender;
+    wrap.appendChild(s);
+  }
+  const b = document.createElement('div');
+  b.innerHTML = html;
+  wrap.appendChild(b);
+  chat.appendChild(wrap);
+  scrollAbajo();
+  return wrap;
+}
+
+function bubbleTexto(from, texto, sender){
+  crearMsg({from, sender, html:`<div class="bubble">${texto}</div>`});
+}
+
+function bubbleChips(chips){
+  const html = `<div class="chips">${chips.map(c=>`<div class="chip ${c.destacado?'destacado':''} ${c.humano?'humano':''}" data-accion="${c.accion}">${c.icono||''} ${c.texto}</div>`).join('')}</div>`;
+  const el = crearMsg({from:'bezzi', html});
+  el.querySelectorAll('.chip').forEach(chip=>{
+    chip.addEventListener('click', ()=> manejarAccion(chip.dataset.accion, chip.textContent.trim()));
+  });
+}
+
+function bubbleSaldo(){
+  crearMsg({from:'bezzi', html:`
+    <div class="card">
+      <div class="etiqueta">Saldo disponible</div>
+      <div class="monto">$ 84.350</div>
+      <div class="nota">▲ Generando interés todos los días</div>
+    </div>`});
+}
+
+function bubbleConfirmacion(titulo, detalle){
+  crearMsg({from:'bezzi', html:`
+    <div class="confirm-card">
+      <div class="check">✓</div>
+      <div class="txt"><b>${titulo}</b><span>${detalle}</span></div>
+    </div>`});
+}
+
+function mostrarEscribiendo(cb, delay=850){
+  arcoEstado.textContent = 'Bezzi está escribiendo…';
+  const el = crearMsg({from:'bezzi', html:`<div class="typing"><span></span><span></span><span></span></div>`});
+  setTimeout(()=>{
+    el.remove();
+    arcoEstado.textContent = 'Bezzi está lista para ayudarte';
+    cb();
+  }, delay);
+}
+
+function menuPrincipal(){
+  bubbleChips([
+    {texto:'Ver mi saldo', icono:'💰', accion:'saldo'},
+    {texto:'Transferir plata', icono:'💸', accion:'transferir', destacado:true},
+    {texto:'Pagar con QR', icono:'📷', accion:'pagar'},
+    {texto:'Ver beneficios', icono:'🎁', accion:'beneficios'},
+    {texto:'Hablar con una persona', icono:'🙋', accion:'humano', humano:true},
+  ]);
+}
+
+function manejarAccion(accion, textoUsuario){
+  bubbleTexto('user', textoUsuario, 'Vos');
+  if(accion==='saldo'){
+    mostrarEscribiendo(()=>{
+      bubbleTexto('bezzi','Mirá, así está tu cuenta ahora mismo:');
+      bubbleSaldo();
+      setTimeout(()=>{
+        bubbleTexto('bezzi','¿Querés hacer algo más? Pedímelo como quieras, con tus palabras.');
+        menuPrincipal();
+      }, 500);
+    });
+  } else if(accion==='transferir'){
+    mostrarEscribiendo(()=>{
+      bubbleTexto('bezzi','Dale, te ayudo. Decime <strong>a quién</strong> le querés transferir y <strong>cuánto</strong>. Por ejemplo: "$5000 a mi mamá".');
+      bubbleChips([
+        {texto:'$5.000 a Mamá', accion:'confirmar-transf'},
+        {texto:'$2.000 a Juan', accion:'confirmar-transf'},
+        {texto:'Elegir un contacto', accion:'contactos'},
+      ]);
+    });
+  } else if(accion==='confirmar-transf'){
+    mostrarEscribiendo(()=>{
+      bubbleTexto('bezzi','Perfecto. Antes de mandarlo, confirmame: es correcto este envío, ¿verdad?');
+      bubbleChips([
+        {texto:'Sí, confirmar', accion:'exito-transf', destacado:true},
+        {texto:'No, cambiar el monto', accion:'transferir'},
+      ]);
+    }, 650);
+  } else if(accion==='exito-transf'){
+    mostrarEscribiendo(()=>{
+      bubbleConfirmacion('¡Listo, tu transferencia fue exitosa!','Re fácil, re rápido, re cordobés.');
+      setTimeout(()=>{
+        bubbleTexto('bezzi','¿Necesitás algo más?');
+        menuPrincipal();
+      }, 500);
+    }, 900);
+  } else if(accion==='pagar'){
+    mostrarEscribiendo(()=>{
+      bubbleTexto('bezzi','Apuntá la cámara al código QR del comercio y yo me encargo del resto. ¿Querés que abra la cámara ahora?');
+      bubbleChips([
+        {texto:'Abrir cámara', icono:'📷', accion:'abrir-camara', destacado:true},
+        {texto:'Mejor no, gracias', accion:'menu'},
+      ]);
+    });
+  } else if(accion==='abrir-camara'){
+    mostrarEscribiendo(()=>{
+      bubbleConfirmacion('Pago realizado','$3.200 en Café de la Cañada · Re fácil.');
+      setTimeout(()=> menuPrincipal(), 500);
+    }, 1000);
+  } else if(accion==='beneficios'){
+    mostrarEscribiendo(()=>{
+      bubbleTexto('bezzi','Tenés estos beneficios activos esta semana:');
+      bubbleChips([
+        {texto:'20% en Farmacias', icono:'💊', accion:'menu'},
+        {texto:'2x1 en cines', icono:'🎬', accion:'menu'},
+        {texto:'15% en supermercados', icono:'🛒', accion:'menu'},
+      ]);
+    });
+  } else if(accion==='humano'){
+    mostrarEscribiendo(()=>{
+      bubbleTexto('bezzi','Sin problema. Te conecto con alguien de nuestro equipo por WhatsApp ahora mismo, no hace falta que hagas nada más.');
+      bubbleChips([
+        {texto:'Ir a WhatsApp', icono:'💬', accion:'menu', humano:true},
+      ]);
+    });
+  } else if(accion==='contactos'){
+    mostrarEscribiendo(()=>{
+      bubbleTexto('bezzi','Decime el nombre o el número de quien querés que reciba la plata, con toda tranquilidad.');
+    });
+  } else {
+    mostrarEscribiendo(()=> menuPrincipal());
+  }
+}
+
+// Bienvenida inicial
+function iniciar(){
+  bubbleTexto('bezzi','¡Hola! 👋 Soy <strong>Bezzi</strong>, tu asistente de Bezza.');
+  setTimeout(()=>{
+    mostrarEscribiendo(()=>{
+      bubbleTexto('bezzi','Estoy para ayudarte con tus pagos, cobros y beneficios. Hablame como si le hablaras a un amigo, yo te entiendo igual.');
+      menuPrincipal();
+    }, 700);
+  }, 400);
+}
+
+// Envío de texto libre
+function enviarLibre(){
+  const texto = inputTexto.value.trim();
+  if(!texto) return;
+  bubbleTexto('user', texto, 'Vos');
+  inputTexto.value='';
+  const t = texto.toLowerCase();
+  mostrarEscribiendo(()=>{
+    if(t.includes('salgo')||t.includes('saldo')||t.includes('plata')||t.includes('cuanto tengo')){
+      bubbleTexto('bezzi','Claro, mirá:');
+      bubbleSaldo();
+    } else if(t.includes('transfer')||t.includes('enviar')||t.includes('mandar')){
+      bubbleTexto('bezzi','Dale, te ayudo con eso. ¿A quién y cuánto le querés mandar?');
+    } else if(t.includes('pagar')||t.includes('qr')){
+      bubbleTexto('bezzi','Perfecto, abrí la cámara cuando quieras y escaneá el QR del comercio.');
+    } else if(t.includes('benefic')||t.includes('descuento')||t.includes('promo')){
+      bubbleTexto('bezzi','Tenés varios beneficios activos esta semana. Te los muestro:');
+    } else if(t.includes('persona')||t.includes('humano')||t.includes('ayuda')){
+      bubbleTexto('bezzi','Sin problema, te conecto con nuestro equipo enseguida.');
+    } else {
+      bubbleTexto('bezzi','Te leo. Contame con tus palabras qué necesitás, o elegí una de estas opciones:');
+    }
+    menuPrincipal();
+  }, 700);
+}
+
+btnEnviar.addEventListener('click', enviarLibre);
+inputTexto.addEventListener('keydown', e=>{ if(e.key==='Enter') enviarLibre(); });
+
+let escuchando = false;
+btnMic.addEventListener('click', ()=>{
+  escuchando = !escuchando;
+  btnMic.classList.toggle('activo', escuchando);
+  arco.classList.toggle('escuchando', escuchando);
+  arcoEstado.textContent = escuchando ? 'Escuchando… hablá tranquilo' : 'Bezzi está lista para ayudarte';
+  if(escuchando){
+    inputTexto.placeholder = 'Te escucho…';
+    setTimeout(()=>{
+      if(escuchando){
+        escuchando=false;
+        btnMic.classList.remove('activo');
+        arco.classList.remove('escuchando');
+        inputTexto.placeholder='Escribile a Bezzi…';
+        inputTexto.value='Quiero transferirle plata a mi hijo';
+        enviarLibre();
+      }
+    }, 1800);
+  }
+});
+
+// Barra de accesibilidad
+const btnTextoGrande = document.getElementById('btn-textogrande');
+const btnLeer = document.getElementById('btn-leer');
+btnTextoGrande.addEventListener('click', ()=>{
+  const activo = btnTextoGrande.classList.toggle('on');
+  document.getElementById('screen').style.setProperty('--font-txt-scale', activo ? '1.22' : '1');
+});
+btnLeer.addEventListener('click', ()=>{
+  btnLeer.classList.toggle('on');
+});
+
+// Reloj en vivo
+function actualizarReloj(){
+  const d = new Date();
+  document.getElementById('clock').textContent = d.toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit',hour12:false});
+}
+actualizarReloj();
+setInterval(actualizarReloj, 30000);
+
+iniciar();
+</script>
+
+</body>
+</html>
